@@ -1,0 +1,55 @@
+{
+  "upstream": {
+    "libvpx": {
+      "url": "https://github.com/webmproject/libvpx/archive/refs/tags/v1.17.0.tar.gz",
+      "sha256": "1020f184046187baa2985dbde38e0691f49c44088bca7a1842b0236c6081dc0a"
+    },
+    "libwebm": {
+      "url": "https://github.com/webmproject/libwebm/archive/refs/tags/libwebm-1.0.0.32.tar.gz",
+      "sha256": "7fd5e085bda9f8031cf2ad2a1e52d9b7b29cba9c0b96ad2ce794ce89e4249eb8"
+    }
+  },
+  "pruning": "Nothing of libvpx or libwebm is vendored: the codec is compat.libvpx 1.17.0 and the container compat.libwebm 1.0.0.32, built from the same tag archives. Their READMEs, licenses, patent grants and authors are retained here.",
+  "documents": [
+    {
+      "path": "upstream/libvpx/AUTHORS",
+      "source": "https://github.com/webmproject/libvpx/blob/v1.17.0/AUTHORS",
+      "sha256": "8a98b560e5314713550e6d3ba2d8acf3ef54dfc870fc448bef08a7c57648a0bd"
+    },
+    {
+      "path": "upstream/libvpx/LICENSE",
+      "source": "https://github.com/webmproject/libvpx/blob/v1.17.0/LICENSE",
+      "sha256": "8267348d5af1262c11d1a08de2f5afc77457755f1ac658627dd9acf71011d615"
+    },
+    {
+      "path": "upstream/libvpx/PATENTS",
+      "source": "https://github.com/webmproject/libvpx/blob/v1.17.0/PATENTS",
+      "sha256": "cc3273e0694ea5896145e0677699b53471b03ea43021ddc50e7923fbb9f5023c"
+    },
+    {
+      "path": "upstream/libvpx/README",
+      "source": "https://github.com/webmproject/libvpx/blob/v1.17.0/README",
+      "sha256": "0791de8b892beac7123a01b3c8fb734b7cdbfc9572085eee36197fcc02acc79d"
+    },
+    {
+      "path": "upstream/libwebm/AUTHORS.TXT",
+      "source": "https://github.com/webmproject/libwebm/blob/libwebm-1.0.0.32/AUTHORS.TXT",
+      "sha256": "3edb5f5496bfff3d6d4a62fa75fe996b814920d0d6e348c2e65c589e7ac5d177"
+    },
+    {
+      "path": "upstream/libwebm/LICENSE.TXT",
+      "source": "https://github.com/webmproject/libwebm/blob/libwebm-1.0.0.32/LICENSE.TXT",
+      "sha256": "5aec868f669e384a22372a4e8a1a6cd7d44c64cd451f960ca69cc170d1e13acf"
+    },
+    {
+      "path": "upstream/libwebm/PATENTS.TXT",
+      "source": "https://github.com/webmproject/libwebm/blob/libwebm-1.0.0.32/PATENTS.TXT",
+      "sha256": "cc3273e0694ea5896145e0677699b53471b03ea43021ddc50e7923fbb9f5023c"
+    },
+    {
+      "path": "upstream/libwebm/README.libwebm",
+      "source": "https://github.com/webmproject/libwebm/blob/libwebm-1.0.0.32/README.libwebm",
+      "sha256": "e66fb88e4ebbfc3a5771ea4cff60ccbf111f40ccd0ba958f91d96cddc8fbfaf8"
+    }
+  ]
+}

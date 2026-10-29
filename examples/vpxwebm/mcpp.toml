@@ -1,0 +1,15 @@
+# vpxwebm: encode Y4M to VP9 in WebM or IVF, decode WebM or IVF to raw I420,
+# describe a WebM file — written against the module. tools/run_conformance.py
+# compares it with upstream's vpxenc and vpxdec.
+[package]
+name        = "vpxwebm"
+version     = "0.1.0"
+description = "Encode Y4M to VP9 (WebM or IVF), decode WebM or IVF to raw I420, describe a WebM: libvpx and libwebm through import mcpplibs.mwrap.libvpx"
+
+[targets.vpxwebm]
+kind = "bin"
+main = "src/main.cpp"
+
+[dependencies]
+"mcpplibs.mwrap.libvpx" = { path = "../.." }
+

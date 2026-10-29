@@ -1,0 +1,150 @@
+// {{project.name}} — VP9 in WebM through import mcpplibs.mwrap.libvpx: two
+// seconds of moving pictures (a gradient and a bouncing square, 320 x 180 at
+// 30 fps) encoded by libvpx at a constant quality, muxed into a WebM with
+// mkvmuxer, parsed back with mkvparser, decoded, and compared with what went
+// in. Give a file name to also write the WebM (any browser plays it).
+import std;
+import mcpplibs.mwrap.libvpx;
+
+namespace m = mcpplibs::mwrap::libvpx::macros;   // the macros as constants and functions
+namespace vpx = mcpplibs::mwrap::libvpx;         // the typed controls (vpx_codec_control_<ID>)
+
+namespace {
+
+constexpr int W = 320, H = 180, FPS = 30, FRAMES = 60;
+
+void draw(vpx_image_t& img, int t) {
+    const int sx = 20 + (t * 7) % (W - 80), sy = 20 + (t * 3) % (H - 80);
+    for (int y = 0; y < H; ++y)
+        for (int x = 0; x < W; ++x) {
+            const bool square = x >= sx && x < sx + 60 && y >= sy && y < sy + 60;
+            img.planes[m::VPX_PLANE_Y][y * img.stride[m::VPX_PLANE_Y] + x] = static_cast<unsigned char>(square ? 210 : 16 + (x + y + 4 * t) % 200);
+        }
+    for (int y = 0; y < H / 2; ++y)
+        for (int x = 0; x < W / 2; ++x) {
+            img.planes[m::VPX_PLANE_U][y * img.stride[m::VPX_PLANE_U] + x] = static_cast<unsigned char>(96 + x * 64 / (W / 2));
+            img.planes[m::VPX_PLANE_V][y * img.stride[m::VPX_PLANE_V] + x] = static_cast<unsigned char>(160 - y * 64 / (H / 2));
+        }
+}
+
+// mkvmuxer writes through an IMkvWriter: here, memory (seekable, so the
+// duration and the cues are written at the end).
+class Memory final : public mkvmuxer::IMkvWriter {
+public:
+    std::vector<unsigned char> bytes;
+    std::int64_t               at = 0;
+    mkvmuxer::int32 Write(const void* buf, mkvmuxer::uint32 len) override {
+        if (bytes.size() < static_cast<std::size_t>(at) + len) bytes.resize(static_cast<std::size_t>(at) + len);
+        std::memcpy(bytes.data() + at, buf, len);
+        at += len;
+        return 0;
+    }
+    mkvmuxer::int64 Position() const override { return at; }
+    mkvmuxer::int32 Position(mkvmuxer::int64 position) override { return at = position, 0; }
+    bool Seekable() const override { return true; }
+    void ElementStartNotify(mkvmuxer::uint64, mkvmuxer::int64) override {}
+};
+
+class Reader final : public mkvparser::IMkvReader {
+public:
+    explicit Reader(const std::vector<unsigned char>& b) : bytes(b) {}
+    int Read(long long pos, long len, unsigned char* buf) override {
+        if (pos < 0 || len < 0 || static_cast<std::size_t>(pos + len) > bytes.size()) return -1;
+        std::memcpy(buf, bytes.data() + pos, static_cast<std::size_t>(len));
+        return 0;
+    }
+    int Length(long long* total, long long* available) override {
+        *total = *available = static_cast<long long>(bytes.size());
+        return 0;
+    }
+    const std::vector<unsigned char>& bytes;
+};
+
+}  // namespace
+
+int main(int argc, char** argv) {
+    // The encoder: VP9, constant quality, one pass.
+    vpx_codec_enc_cfg_t cfg;
+    vpx_codec_enc_config_default(vpx_codec_vp9_cx(), &cfg, 0);
+    cfg.g_w = W;
+    cfg.g_h = H;
+    cfg.g_timebase = {1, FPS};
+    cfg.rc_end_usage = VPX_Q;
+    vpx_codec_ctx_t encoder;
+    if (m::vpx_codec_enc_init(&encoder, vpx_codec_vp9_cx(), &cfg, 0) != VPX_CODEC_OK) return 1;
+    vpx::vpx_codec_control_VP8E_SET_CPUUSED(&encoder, VP8E_SET_CPUUSED, 5);
+    vpx::vpx_codec_control_VP8E_SET_CQ_LEVEL(&encoder, VP8E_SET_CQ_LEVEL, 20u);
+
+    // The container: one VP9 track.
+    Memory file;
+    mkvmuxer::Segment segment;
+    segment.Init(&file);
+    segment.set_mode(mkvmuxer::Segment::kFile);
+    const auto track = segment.AddVideoTrack(W, H, 1);
+    static_cast<mkvmuxer::VideoTrack*>(segment.GetTrackByNumber(track))->set_codec_id(mkvmuxer::Tracks::kVp9CodecId);
+
+    vpx_image_t img;
+    vpx_img_alloc(&img, VPX_IMG_FMT_I420, W, H, 16);
+    auto mux = [&] {
+        vpx_codec_iter_t it = nullptr;
+        while (const vpx_codec_cx_pkt_t* p = vpx_codec_get_cx_data(&encoder, &it))
+            if (p->kind == VPX_CODEC_CX_FRAME_PKT)
+                segment.AddFrame(static_cast<const std::uint8_t*>(p->data.frame.buf), p->data.frame.sz, track,
+                                 static_cast<std::uint64_t>(p->data.frame.pts) * 1'000'000'000 / FPS, (p->data.frame.flags & m::VPX_FRAME_IS_KEY) != 0);
+    };
+    for (int t = 0; t < FRAMES; ++t) {
+        draw(img, t);
+        vpx_codec_encode(&encoder, &img, t, 1, 0, m::VPX_DL_GOOD_QUALITY);
+        mux();
+    }
+    for (int k = 0; k < 30; ++k) {  // what the look-ahead holds
+        vpx_codec_encode(&encoder, nullptr, -1, 1, 0, m::VPX_DL_GOOD_QUALITY);
+        mux();
+    }
+    vpx_codec_destroy(&encoder);
+    segment.Finalize();
+    std::println("{} frames of {} x {} at {} fps: a WebM of {} bytes ({} kb/s)", FRAMES, W, H, FPS, file.bytes.size(), file.bytes.size() * 8 * FPS / FRAMES / 1000);
+
+    // Back: mkvparser finds the frames, the VP9 decoder gives the pictures.
+    Reader reader(file.bytes);
+    long long pos = 0;
+    mkvparser::EBMLHeader header;
+    header.Parse(&reader, pos);
+    mkvparser::Segment* parsed = nullptr;
+    mkvparser::Segment::CreateInstance(&reader, pos, parsed);
+    std::unique_ptr<mkvparser::Segment> owner(parsed);
+    parsed->Load();
+    vpx_codec_dec_cfg_t dcfg{};
+    vpx_codec_ctx_t decoder;
+    m::vpx_codec_dec_init(&decoder, vpx_codec_vp9_dx(), &dcfg, 0);
+    int frames = 0;
+    double worst = 99;
+    for (const mkvparser::Cluster* c = parsed->GetFirst(); c && !c->EOS(); c = parsed->GetNext(c)) {
+        const mkvparser::BlockEntry* e = nullptr;
+        for (c->GetFirst(e); e && !e->EOS(); c->GetNext(e, e)) {
+            const mkvparser::Block::Frame& f = e->GetBlock()->GetFrame(0);
+            std::vector<unsigned char> data(static_cast<std::size_t>(f.len));
+            f.Read(&reader, data.data());
+            vpx_codec_decode(&decoder, data.data(), static_cast<unsigned>(data.size()), nullptr, 0);
+            vpx_codec_iter_t it = nullptr;
+            while (vpx_image_t* out = vpx_codec_get_frame(&decoder, &it)) {
+                draw(img, frames++);
+                double se = 0;
+                for (int y = 0; y < H; ++y)
+                    for (int x = 0; x < W; ++x) {
+                        const int d = out->planes[0][y * out->stride[0] + x] - img.planes[0][y * img.stride[0] + x];
+                        se += d * d;
+                    }
+                if (se > 0) worst = std::min(worst, 10 * std::log10(255.0 * 255.0 * W * H / se));
+            }
+        }
+    }
+    vpx_codec_destroy(&decoder);
+    vpx_img_free(&img);
+    std::println("read back: {} frames, the worst at {:.1f} dB PSNR (luma)", frames, worst);
+    if (argc > 1) {
+        std::ofstream(argv[1], std::ios::binary).write(reinterpret_cast<const char*>(file.bytes.data()), static_cast<std::streamsize>(file.bytes.size()));
+        std::println("wrote {}", argv[1]);
+    }
+    return frames == FRAMES && worst > 35 ? 0 : 1;
+}
