@@ -1,0 +1,4 @@
+[template]
+description  = "VP9 in WebM with import mcpplibs.mwrap.libvpx: two seconds of moving pictures encoded by libvpx, muxed into a WebM with libwebm's mkvmuxer, parsed back with mkvparser and decoded — the frames' quality and the file's size — all in memory, no device or file needed"
+default      = true
+post_message = "Run `mcpp run`, or `mcpp run -- clip.webm` to also write the WebM to a file (any browser plays it)."

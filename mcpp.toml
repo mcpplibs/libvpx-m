@@ -1,0 +1,67 @@
+# Module wrapper; upstream API preserved. Policy: mcpp-index/docs/mwrap.md.
+[package]
+namespace   = "mcpplibs.mwrap"
+name        = "libvpx"
+version     = "1.17.0"
+description = "libvpx C++ modules for mcpp (import mcpplibs.mwrap.libvpx;): the libvpx 1.17.0 VP9 codec (encoder and decoder) and the libwebm 1.0.0.32 WebM container (mkvmuxer and mkvparser), over compat.libvpx and compat.libwebm; the typed controls adapted, the macros as constants and functions"
+license     = "Apache-2.0"
+authors     = ["mcpp-community"]
+repo        = "https://github.com/mcpplibs/libvpx-m"
+platforms   = ["linux", "macos", "windows", "emscripten"]
+
+[targets.libvpx]
+kind = "lib"
+
+[build]
+sources      = ["src/*.cppm", "src/*.cpp"]
+# <mwrap/libvpx/macros.hpp>: the headers, in the order the modules include
+# them, for the macros a C++ entity cannot be.
+include_dirs = ["include"]
+
+[dependencies]
+compat.libvpx  = "1.17.0"
+compat.libwebm = "1.0.0.32"
+
+[package.metadata.mwrap]
+upstream-version = "1.17.0"
+libwebm-version  = "1.0.0.32"
+
+[[runtime.deploy]]
+from = "LICENSE"
+to   = "licenses/libvpx"
+
+[[runtime.deploy]]
+from = "NOTICE"
+to   = "licenses/libvpx"
+
+[[runtime.deploy]]
+from = "upstream/libvpx/README"
+to   = "licenses/libvpx/upstream/libvpx"
+
+[[runtime.deploy]]
+from = "upstream/libvpx/LICENSE"
+to   = "licenses/libvpx/upstream/libvpx"
+
+[[runtime.deploy]]
+from = "upstream/libvpx/PATENTS"
+to   = "licenses/libvpx/upstream/libvpx"
+
+[[runtime.deploy]]
+from = "upstream/libvpx/AUTHORS"
+to   = "licenses/libvpx/upstream/libvpx"
+
+[[runtime.deploy]]
+from = "upstream/libwebm/README.libwebm"
+to   = "licenses/libvpx/upstream/libwebm"
+
+[[runtime.deploy]]
+from = "upstream/libwebm/LICENSE.TXT"
+to   = "licenses/libvpx/upstream/libwebm"
+
+[[runtime.deploy]]
+from = "upstream/libwebm/PATENTS.TXT"
+to   = "licenses/libvpx/upstream/libwebm"
+
+[[runtime.deploy]]
+from = "upstream/libwebm/AUTHORS.TXT"
+to   = "licenses/libvpx/upstream/libwebm"
