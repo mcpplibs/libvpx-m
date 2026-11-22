@@ -2,7 +2,7 @@
 [package]
 namespace   = "mcpplibs.mwrap"
 name        = "libvpx"
-version     = "1.17.0"
+version     = "1.17.0.1"
 description = "libvpx C++ modules for mcpp (import mcpplibs.mwrap.libvpx;): the libvpx 1.17.0 VP9 codec (encoder and decoder) and the libwebm 1.0.0.32 WebM container (mkvmuxer and mkvparser), over compat.libvpx and compat.libwebm; the typed controls adapted, the macros as constants and functions"
 license     = "Apache-2.0"
 authors     = ["mcpp-community"]
