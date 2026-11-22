@@ -31,7 +31,7 @@ WebM（所有浏览器都能播放的容器）。上游 API 保持不变：`vpx_
 ## 快速开始
 
 ```sh
-mcpp new clip --template mcpplibs.mwrap.libvpx@1.17.0
+mcpp new clip --template mcpplibs.mwrap.libvpx@1.17.0.1
 cd clip
 mcpp run -- clip.webm
 ```
@@ -41,7 +41,7 @@ PSNR；给出文件名时同时写出 WebM。
 
 ```toml
 [dependencies]
-"mcpplibs.mwrap.libvpx" = "1.17.0"
+mcpplibs.mwrap.libvpx = "1.17.0.1"
 ```
 
 ```cpp

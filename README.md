@@ -35,7 +35,7 @@ CI run the files written are byte-identical to upstream's own `vpxenc`, and
 ## Getting started
 
 ```sh
-mcpp new clip --template mcpplibs.mwrap.libvpx@1.17.0
+mcpp new clip --template mcpplibs.mwrap.libvpx@1.17.0.1
 cd clip
 mcpp run -- clip.webm
 ```
@@ -46,7 +46,7 @@ size and the worst PSNR; given a file name it also writes the WebM.
 
 ```toml
 [dependencies]
-"mcpplibs.mwrap.libvpx" = "1.17.0"
+mcpplibs.mwrap.libvpx = "1.17.0.1"
 ```
 
 ```cpp

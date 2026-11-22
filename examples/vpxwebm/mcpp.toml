@@ -11,5 +11,5 @@ kind = "bin"
 main = "src/main.cpp"
 
 [dependencies]
-"mcpplibs.mwrap.libvpx" = { path = "../.." }
+mcpplibs.mwrap.libvpx = { path = "../.." }
 
